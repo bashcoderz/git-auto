@@ -192,16 +192,24 @@ while true; do
 			8) git_pull;;
 			9)readme;;
 			10)
-			echo -e -n "Enter your command: " 
-			IFS= read -r cmd
-			echo -e "\nExecuting..."
-			sleep 2
-				echo -e "\n\nCommand result(s):"
-				echo -e "------------------"
-				bash -c "$cmd" 2>/dev/null
-				 if [ $? -ne 0 ]; then
-			                git_error
-				 fi
+				echo -e -n "Enter your command: " 
+				IFS= read -r cmd
+				echo "Debug: Command to execute: '$cmd'"
+    				echo "Debug: Current directory: $(pwd)"
+    				echo "Debug: Home directory: $HOME"
+
+    				echo -e "\nExecuting..."
+    				sleep 2
+    				echo -e "\nCommand result(s):"
+    				echo -e "------------------"
+				if eval "$cmd" 2>/dev/null; then
+        				echo -e "\nCommand succeeded :) \n"
+    				else
+        				echo "Command failed with exit code: $?"
+        				echo -e "\nError output:"
+        				eval "$cmd" 2>&1
+        				git_error
+    				fi
 				;;
 			11) clear;;
 			12)
