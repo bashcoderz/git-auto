@@ -12,7 +12,7 @@ echo -e "
 ///     ///     ///     ///           ///    ///   ///      ///      ///          ///      ///
 /////////       ///     ///           ///    ///   ////////////      ///          ////////////
 
-											version 1.2	"
+											version 1.6	"
 echo -e "\n A Tool to Automate Git Operations"
 
 sleep 1
@@ -194,11 +194,11 @@ git_pull(){
                 git_error
         fi
 	echo -e "\nPull operation completed successfully! :) "
-}
+ }
 
 gitmaster(){
 while true; do
-	echo -e "\n\n Git Operations:\n --------------------------------\n| 1.Install_Git			|\n| 2.Configure_Git		|\n| 3.Create_sshkey		|\n| 4.Create_Localrepo		|\n| 5.Clone_repo			|\n| 6.Commit			|\n| 7.Push			|\n| 8.Pull			|\n| 9.README.md			|\n| 10.Custom Command		|\n| 11.Clear Terminal		|\n| 12.Exit			|\n --------------------------------\n"
+	echo -e "\n\n Git Operations:\n --------------------------------\n| 1.Install_Git			|\n| 2.Configure_Git		|\n| 3.Create_sshkey		|\n| 4.Create_Localrepo		|\n| 5.Clone_repo			|\n| 6.Commit			|\n| 7.Push			|\n| 8.Pull			|\n| 9.Git branching		|\n| 10.Switch branch		|\n| 11.Merge branch		|\n| 12.Show branch difference	|\n| 13.Git stashing		|\n| 14.Search within the project  |\n| 15.README.md			|\n| 16.Custom Command		|\n| 17.Clear Terminal		|\n| 18.Exit			|\n --------------------------------\n"
 #	read -p "Enter your choice: " option
 	echo -e -n "Enter your choice: "
 	read option
@@ -211,10 +211,16 @@ while true; do
 			6) git_commit;;
 			7) git_push;;
 			8) git_pull;;
-			9)readme;;
-			10)custom;;
-			11) clear;;
-			12)
+			9) git_branch;;
+			10) git_switch;;
+			11) git_merge;;
+			12) git_diff;;
+			13) git_stash;;
+			14) git_grep;;
+			15) readme;;
+			16) custom;;
+			17) clear;;
+			18)
 			echo -e "\nClosing..."
 			sleep 1
 			clear
@@ -240,7 +246,7 @@ git_commit(){
         echo -e "\nCommitting with message: \"$message\" ..."
         sleep 1
         git commit -m "$message"
-        git status
+        git_status
 }
 
 git_push() {
@@ -303,6 +309,179 @@ git_push() {
     	fi
 
     	echo -e "\nPush operation completed successfully!"
+       sleep 1
+        git_status
+}
+
+git_status(){
+
+        echo -e "\nChecking status..."
+        sleep 1
+        git status
+        sleep 1
+}
+
+git_branch(){
+	echo -e  "\nChoose options below:\n---------------------\n 1.Create a branch \n 2.Rename a branch \n 3.List branches \n 4.Delete a branch\n"
+        echo -e -n "Enter your choice: "
+        read option
+                case $option in
+			1)	echo -e -n "\nEnter branch name: "
+				read  branch
+				echo -e "Creating branch $branch..."
+				sleep 2
+				git branch $branch
+				git_branchlist
+				if [ $? -ne 0 ]; then
+                			git_error
+                			return 1
+        			fi
+				echo -e "\nBranch $branch created successfully!  :)"
+				sleep 1 ;;
+
+			2)	echo -e "\nRename a branch"
+				git_branchlist
+				echo -e -n "\nEnter old branch name: "
+				read  oldbranch
+				echo -e -n "\nEnter new branch name: "
+				read  newbranch
+				git branch -m  $oldbranch $newbranch
+				if [ $? -ne 0 ]; then
+                                        git_error
+                                        return 1
+                                fi
+				echo -e "\nRenamed branch $oldbranch to $newbranch ..."
+				sleep 2
+				git_branchlist
+				sleep 2 ;;
+
+			3)	git_branchlist ;;
+
+			4)	git_branchlist
+				echo -e -n "\nEnter a branch name to delete: " 
+				read  deletebranch
+				echo -e "\nDeleting $deletebranch branch...\n"
+				sleep 2
+				git branch -D $deletebranch
+				  if [ $? -ne 0 ]; then
+                                        git_error
+                                        return 1
+                                fi
+				git branch -a
+				echo -e "\nBranch $deletebranch has been deleted successfully!  :)"
+				sleep 2 ;;
+			*)
+				echo -e "\nOption not found!."
+			esac
+}
+
+git_branchlist(){
+	echo -e "\nList of existing branches:\n--------------------------"
+        git branch -a
+        sleep 1
+}
+
+git_switch(){
+	echo -e "\nCurrent Branch you're working with:"
+	git branch --show-current
+	git_branchlist
+	sleep 1
+	echo -e -n "\nEnter branch name to switch: " 
+	read branch
+	git switch $branch
+	 if [ $? -ne 0 ]; then
+                git_error
+                return 1
+        fi
+	sleep 1
+	echo -e "\nYour current branch: "
+        git branch --show-current
+	sleep 1
+}
+
+git_merge(){
+	echo -e -n "\nEnter branch name to merge: "
+	read  mergebranch
+	echo -e -n "\nEnter a merge message: "
+	read  message
+	echo -e -n "\nDo you want to abort merging? [y/n]: "
+	read  choice
+	if [[ "$choice" = "y" || "$choice" = "Y" ]]; then
+		git merge --abort
+		return 1
+	fi
+	git merge $mergebranch -m $message
+	if [ $? -ne 0 ]; then
+        	git_error
+        	return 1
+	fi
+	echo -e "Branch $mergebranch has been merged successfully! :)"
+	sleep 1
+}
+
+git_diff(){
+	echo -e -n "\n Choose 'c' to compare changes between branches \n or Choose 'a' to see all staged and unstaged changes: "
+        read  choice
+        if [[ "$choice" = "c" || "$choice" = "C" ]]; then
+		echo -e -n "\nEnter first branch name: "
+		read branch1
+		echo -e -n "\nEnter second branch name: "
+		read branch2
+		echo -e "\nChanges between branches"
+		git diff $branch1 $branch2
+		 if [ $? -ne 0 ]; then
+                	git_error
+                	return 1
+	        fi
+		sleep 1
+	elif [[ "$choice" = "a" || "$choice" = "A" ]]; then
+		echo -e "\nShowing staged and unstaged changes..."
+		sleep 1
+		git diff HEAD
+		sleep 1
+	else
+		git_error
+	fi
+}
+
+git_stash(){
+	echo -e -n "\nChoose 's' to stash \nChoose 'l' to see all past stashes \nChoose 'p' to remove latest stash \nChoose 'c' to clear all stashes\n\nEnter your choice: "
+	read choice
+	if [[ "$choice" = "s" || "$choice" = "S" ]]; then
+		echo -e "\nTemporary saving without committing..."
+		sleep 1
+		git stash
+		sleep 1
+        elif [[ "$choice" = "l" || "$choice" = "L" ]]; then
+		echo -e "\nStash list: "
+		git stash list
+                sleep 1
+	elif [[ "$choice" = "p" || "$choice" = "P" ]]; then
+		echo -e "Removing latest stash..."
+		sleep 1
+		git stash pop
+		sleep 1
+	elif [[ "$choice" = "c" || "$choice" = "C" ]]; then
+		echo -e "Clearing stashes..."
+		sleep 1
+		git stash clear
+		sleep 1
+        else
+                git_error
+        fi
+}
+
+git_grep(){
+	echo -e -n "\nSearch any word in your repo: "
+	read word
+	echo -e "\nSearching ..."
+	sleep 2
+	git grep -i -n "$word"
+	 if [ $? -ne 0 ]; then
+                git_error
+                return 1
+        fi
+	sleep 2
 }
 
 git_ssh_keygen(){
@@ -317,7 +496,6 @@ git_ssh_keygen(){
 	sleep 1
 	echo -e "\nCopy the key below and add it into your 'GitHub Deploy key' from GitHub Settings"
 	cat ~/.ssh/id_ed25519.pub
-
 }
 
 git_error(){
